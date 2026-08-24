@@ -1,0 +1,87 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) * .6);
+  --radius-md: calc(var(--radius) * .8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --font-sans: 'DM Sans', 'Geist', sans-serif;
+  --font-serif: 'DM Serif Display', Georgia, serif;
+}
+
+:root {
+  color-scheme: dark;
+  --background: #09090b;
+  --foreground: #ffffff;
+  --card: #121215;
+  --card-foreground: #ffffff;
+  --popover: #141418;
+  --popover-foreground: #ffffff;
+  --primary: #eab308;
+  --primary-foreground: #000000;
+  --secondary: #1f1f24;
+  --secondary-foreground: #ffffff;
+  --muted: #1c1c21;
+  --muted-foreground: #a1a1aa;
+  --accent: #d97706;
+  --accent-foreground: #ffffff;
+  --border: rgba(234, 179, 8, 0.18);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #eab308;
+  --radius: .85rem;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #09090b;
+  --foreground: #ffffff;
+  --card: #121215;
+  --card-foreground: #ffffff;
+  --popover: #141418;
+  --popover-foreground: #ffffff;
+  --primary: #eab308;
+  --primary-foreground: #000000;
+  --secondary: #1f1f24;
+  --secondary-foreground: #ffffff;
+  --muted: #1c1c21;
+  --muted-foreground: #a1a1aa;
+  --accent: #d97706;
+  --accent-foreground: #ffffff;
+  --border: rgba(234, 179, 8, 0.18);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #eab308;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans selection:bg-amber-500/30 selection:text-amber-300;
+    background-image: radial-gradient(circle at 50% 0%, rgba(234, 179, 8, 0.05) 0%, transparent 60%);
+  }
+  button {
+    cursor: pointer;
+  }
+}
