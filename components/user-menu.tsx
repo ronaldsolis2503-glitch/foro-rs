@@ -17,7 +17,7 @@ function Avatar({ initials, tone, small = false }: { initials: string; tone: str
 }
 
 export function UserMenu({ compact = false }: { compact?: boolean }) {
-  const { user, isAuthenticated, openAuthModal, logout } = useAuth()
+  const { user, isAuthenticated, openAuthModal, openProfileModal, logout } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -80,10 +80,13 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
               </div>
 
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false)
+                  openProfileModal()
+                }}
                 className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-muted transition"
               >
-                <User className="size-4 text-fuchsia-500" /> Mi Perfil
+                <User className="size-4 text-fuchsia-500" /> Mi Perfil Real
               </button>
 
               <button
@@ -114,7 +117,7 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
   return (
     <div className="relative w-full" ref={menuRef}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => openProfileModal()}
         className="flex w-full items-center justify-between rounded-2xl bg-card p-3 shadow-sm ring-1 ring-border transition hover:bg-muted/50"
       >
         <div className="flex items-center gap-3">
@@ -126,26 +129,6 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
         </div>
         <ChevronDown className="size-4 text-muted-foreground" />
       </button>
-
-      {isOpen && (
-        <div className="absolute bottom-full left-0 mb-2 w-full rounded-2xl border border-border bg-card p-2 shadow-xl ring-1 ring-border">
-          <div className="flex items-center justify-between border-b border-border px-3 py-2 text-xs text-muted-foreground">
-            <span>Reputación</span>
-            <span className="flex items-center gap-1 font-bold text-amber-500">
-              <Star className="size-3.5 fill-current" /> {user.reputation} pts
-            </span>
-          </div>
-          <button
-            onClick={() => {
-              setIsOpen(false)
-              logout()
-            }}
-            className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-destructive/10 py-2 text-xs font-semibold text-destructive hover:bg-destructive/20 transition"
-          >
-            <LogOut className="size-3.5" /> Cerrar sesión
-          </button>
-        </div>
-      )}
     </div>
   )
 }

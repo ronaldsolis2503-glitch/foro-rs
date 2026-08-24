@@ -1,0 +1,18 @@
+[
+  {
+    "id": "flw-1787600597205",
+    "followerId": "usr-1787596617003",
+    "followerName": "a1",
+    "followerHandle": "@a1",
+    "targetUserId": "usr-1787596867057",
+    "createdAt": "2026-08-24T19:43:17.205Z"
+  },
+  {
+    "id": "flw-1787600724731",
+    "followerId": "usr-1787596867057",
+    "followerName": "a2",
+    "followerHandle": "@a2",
+    "targetUserId": "usr-1787596617003",
+    "createdAt": "2026-08-24T19:45:24.731Z"
+  }
+]

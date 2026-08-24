@@ -1,0 +1,14 @@
+[
+  {
+    "id": "rel-1787600630167",
+    "requesterId": "usr-1787596867057",
+    "requesterName": "a2",
+    "requesterHandle": "@a2",
+    "recipientId": "usr-1787596617003",
+    "recipientName": "Creador Target",
+    "recipientHandle": "@target",
+    "status": "accepted",
+    "type": "message_and_friend",
+    "createdAt": "2026-08-24T19:43:50.167Z"
+  }
+]

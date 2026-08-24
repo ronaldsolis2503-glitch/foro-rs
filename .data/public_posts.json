@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1787600580110,
+    "type": "Preguntas",
+    "name": "a2",
+    "handle": "@a2",
+    "initials": "A2",
+    "tone": "from-fuchsia-500 via-rose-500 to-orange-400",
+    "time": "Hace un momento",
+    "title": "hola soy nuevo \n...",
+    "text": "hola soy nuevo \n",
+    "imageUrl": null,
+    "tags": "#preguntas #filmmaking",
+    "likes": 1,
+    "likedBy": [
+      "usr-1787596617003"
+    ],
+    "commentsList": [],
+    "gradient": "from-zinc-950 via-zinc-900 to-black",
+    "authorProfile": {
+      "id": "usr-1787596867057",
+      "name": "a2",
+      "email": "yosogo08@hotmail.com",
+      "handle": "@a2",
+      "initials": "A2",
+      "role": "Filmmaker / Creador",
+      "experienceLevel": "Intermedio",
+      "location": "Latinoamérica",
+      "phone": "12312312",
+      "bio": "Creador audiovisual en Foro RS.",
+      "gear": [
+        "Sony FX3",
+        "DaVinci Resolve"
+      ],
+      "portfolioUrl": "",
+      "reputation": 186,
+      "avatarTone": "from-fuchsia-500 via-rose-500 to-orange-400",
+      "joinedAt": "Hoy",
+      "stats": {
+        "posts": 2,
+        "comments": 6,
+        "likes": 13
+      }
+    },
+    "createdAt": "2026-08-24T19:43:00.110Z"
+  }
+]
