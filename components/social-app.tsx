@@ -4,39 +4,613 @@ import { useMemo, useState } from 'react'
 import {
   Bell, Bookmark, BriefcaseBusiness, Check, ChevronRight, Compass, Download, FileText,
   Heart, Home, Image as ImageIcon, MessageCircle, MoreHorizontal, Palette, Play, Plus,
-  Search, Send, Settings, Sparkles, Star, UserPlus, Users, Video, Wrench, X, Zap,
+  Search, Send, Settings, Sparkles, Star, UserPlus, Users, Video, Wrench, X, Zap, LogIn,
 } from 'lucide-react'
+import { AuthProvider, useAuth } from '@/lib/auth-context'
+import { AuthModal } from '@/components/auth-modal'
+import { UserMenu } from '@/components/user-menu'
 
 type Section = 'Inicio' | 'Explorar' | 'Preguntas' | 'Showcase' | 'Recursos' | 'Colaboraciones' | 'Tutoriales' | 'Mi red'
 type Filter = 'Para ti' | 'Preguntas' | 'Proyectos' | 'Recursos' | 'Tutoriales'
 
-type Post = { id: number; type: Filter; name: string; handle: string; initials: string; tone: string; time: string; title: string; text: string; tags: string; likes: number; comments: number; gradient: string; solved?: boolean }
+type Post = {
+  id: number
+  type: Filter
+  name: string
+  handle: string
+  initials: string
+  tone: string
+  time: string
+  title: string
+  text: string
+  tags: string
+  likes: number
+  comments: number
+  gradient: string
+  solved?: boolean
+}
 
-const posts: Post[] = [
+const initialPosts: Post[] = [
   { id: 1, type: 'Preguntas', name: 'Sofía Ramírez', handle: '@sofiar', initials: 'SR', tone: 'from-violet-500 to-indigo-400', time: 'Hace 24 min', title: '¿Cómo graban S-Log3 en exteriores con mucho sol?', text: 'Estoy preparando un corto documental y tengo dudas con la exposición y el ruido. ¿Qué configuración recomiendan para un equipo pequeño?', tags: '#sony #slog3 #rodaje', likes: 248, comments: 32, gradient: 'from-indigo-950 via-purple-800 to-fuchsia-700' },
   { id: 2, type: 'Recursos', name: 'Carlos Mendoza', handle: '@carlosm', initials: 'CM', tone: 'from-orange-400 to-amber-300', time: 'Hace 1 h', title: 'Preset de color para entrevistas', text: 'Dejo por aquí mi preset para entrevistas con luz natural. Pensado para pieles cálidas y cámaras mirrorless.', tags: '#recurso #color #davinci', likes: 119, comments: 18, gradient: 'from-orange-950 via-red-700 to-pink-700' },
 ]
 
-const navItems: [typeof Home, Section][] = [[Home, 'Inicio'], [Compass, 'Explorar'], [MessageCircle, 'Preguntas'], [Video, 'Showcase'], [Palette, 'Recursos'], [BriefcaseBusiness, 'Colaboraciones'], [FileText, 'Tutoriales'], [Users, 'Mi red']]
-const resources = [['Cinematic Teal & Orange LUT', 'DaVinci Resolve · Color', '1.245', '4.9'], ['Film Grain Essentials', 'Premiere Pro · Overlay', '894', '4.8'], ['Call Sheet Pro', 'Producción · Template', '632', '4.7'], ['SFX Starter Pack', 'Audio · 120 archivos', '2.1k', '4.9']]
-const questions = ['¿Por qué mi S-Log3 tiene tanto ruido?', '¿Qué lente recomiendan para interiores pequeños?', '¿Cómo igualo dos cámaras Sony diferentes?', '¿Cómo exportar 4K para Instagram?']
+const navItems: [typeof Home, Section][] = [
+  [Home, 'Inicio'], [Compass, 'Explorar'], [MessageCircle, 'Preguntas'], [Video, 'Showcase'],
+  [Palette, 'Recursos'], [BriefcaseBusiness, 'Colaboraciones'], [FileText, 'Tutoriales'], [Users, 'Mi red']
+]
 
-function Avatar({ initials, tone, small = false }: { initials: string; tone: string; small?: boolean }) { return <div className={`grid shrink-0 place-items-center rounded-full bg-gradient-to-br ${tone} font-semibold text-white ring-2 ring-background ${small ? 'size-9 text-[11px]' : 'size-11 text-sm'}`}>{initials}</div> }
+const resources = [
+  ['Cinematic Teal & Orange LUT', 'DaVinci Resolve · Color', '1.245', '4.9'],
+  ['Film Grain Essentials', 'Premiere Pro · Overlay', '894', '4.8'],
+  ['Call Sheet Pro', 'Producción · Template', '632', '4.7'],
+  ['SFX Starter Pack', 'Audio · 120 archivos', '2.1k', '4.9']
+]
 
-function Sidebar({ active, onSelect }: { active: Section; onSelect: (section: Section) => void }) { return <aside className="hidden w-64 shrink-0 lg:block"><div className="sticky top-6 flex flex-col gap-8"><div className="flex items-center gap-3 px-4"><div className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-fuchsia-500 via-rose-500 to-orange-400 text-white shadow-lg shadow-rose-500/20"><Sparkles className="size-5" /></div><span className="font-serif text-2xl font-bold tracking-tight">foro<span className="text-fuchsia-500">RS</span></span></div><nav className="flex flex-col gap-1">{navItems.map(([Icon, label]) => <button key={label} onClick={() => onSelect(label)} className={`flex items-center gap-4 rounded-2xl px-4 py-3 text-sm font-medium transition hover:bg-muted ${active === label ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'}`}><Icon className="size-[19px]" />{label}{label === 'Preguntas' && <span className="ml-auto grid size-5 place-items-center rounded-full bg-fuchsia-500 text-[10px] text-white">3</span>}</button>)}</nav><div className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border"><div className="flex items-center gap-3"><Avatar initials="MR" tone="from-fuchsia-500 to-orange-400" small /><div><p className="text-sm font-semibold">María Rodríguez</p><p className="text-xs text-muted-foreground">Filmmaker · 284 rep.</p></div></div><button className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-muted py-2 text-xs font-medium text-muted-foreground"><Settings className="size-3.5" /> Configuración</button></div></div></aside> }
+const questions = [
+  '¿Por qué mi S-Log3 tiene tanto ruido?',
+  '¿Qué lente recomiendan para interiores pequeños?',
+  '¿Cómo igualo dos cámaras Sony diferentes?',
+  '¿Cómo exportar 4K para Instagram?'
+]
 
-function Header({ onSelect }: { onSelect: (section: Section) => void }) { return <header className="sticky top-0 z-10 border-b border-border/70 bg-background/90 backdrop-blur-xl"><div className="mx-auto flex h-16 max-w-[1320px] items-center justify-between px-4 sm:px-6"><div className="flex items-center gap-3 lg:hidden"><div className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-fuchsia-500 via-rose-500 to-orange-400 text-white"><Sparkles className="size-4" /></div><span className="font-serif text-xl font-bold">foro<span className="text-fuchsia-500">RS</span></span></div><div className="hidden items-center gap-2 text-sm font-medium text-muted-foreground md:flex"><Users className="size-4 text-fuchsia-500" /> La comunidad de filmmakers</div><div className="flex items-center gap-2"><button aria-label="Buscar" className="rounded-xl p-2.5 text-muted-foreground hover:bg-muted md:hidden"><Search className="size-5" /></button><button aria-label="Mensajes" onClick={() => onSelect('Mi red')} className="rounded-xl p-2.5 text-muted-foreground hover:bg-muted"><Send className="size-5" /></button><button aria-label="Notificaciones" onClick={() => onSelect('Preguntas')} className="relative rounded-xl p-2.5 text-muted-foreground hover:bg-muted"><Bell className="size-5" /><span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-fuchsia-500 ring-2 ring-background" /></button><Avatar initials="MR" tone="from-fuchsia-500 to-orange-400" small /></div></div></header> }
+function Avatar({ initials, tone, small = false }: { initials: string; tone: string; small?: boolean }) {
+  return (
+    <div className={`grid shrink-0 place-items-center rounded-full bg-gradient-to-br ${tone} font-semibold text-white ring-2 ring-background ${small ? 'size-9 text-[11px]' : 'size-11 text-sm'}`}>
+      {initials}
+    </div>
+  )
+}
 
-function Composer({ onPost }: { onPost: (text: string, type: Filter) => void }) { const [text, setText] = useState(''); const [type, setType] = useState<Filter>('Preguntas'); return <section className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border"><div className="mb-4 flex items-center gap-2 overflow-x-auto pb-1">{(['Preguntas', 'Proyectos', 'Recursos', 'Tutoriales'] as Filter[]).map(item => <button key={item} onClick={() => setType(item)} className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${type === item ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>{item}</button>)}</div><div className="flex gap-3"><Avatar initials="MR" tone="from-fuchsia-500 to-orange-400" /><textarea value={text} onChange={e => setText(e.target.value)} placeholder="Comparte una duda, recurso o avance de tu proyecto..." rows={2} className="min-h-16 flex-1 resize-none bg-transparent pt-1 text-sm outline-none placeholder:text-muted-foreground" /></div><div className="mt-3 flex items-center justify-between border-t border-border pt-3"><div className="flex gap-1"><button className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"><ImageIcon className="size-4 text-emerald-500" /> Archivo</button><button className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"><Video className="size-4 text-rose-500" /> Video</button></div><button disabled={!text.trim()} onClick={() => { onPost(text, type); setText('') }} className="rounded-xl bg-gradient-to-r from-fuchsia-500 to-orange-400 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-fuchsia-500/20 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40">Publicar</button></div></section> }
+function Sidebar({ active, onSelect }: { active: Section; onSelect: (section: Section) => void }) {
+  const { user, isAuthenticated, openAuthModal } = useAuth()
 
-function PostCard({ post }: { post: Post }) { const [liked, setLiked] = useState(false); const [saved, setSaved] = useState(false); const [showComments, setShowComments] = useState(false); return <article className="overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-border"><div className="flex items-center gap-3 p-4"><Avatar initials={post.initials} tone={post.tone} /><div className="min-w-0 flex-1"><p className="text-sm font-semibold">{post.name}</p><p className="text-xs text-muted-foreground">{post.handle} · {post.time}</p></div><button aria-label="Más opciones" className="rounded-lg p-2 text-muted-foreground hover:bg-muted"><MoreHorizontal className="size-5" /></button></div><div className={`relative flex min-h-44 items-end bg-gradient-to-br ${post.gradient} p-6 sm:min-h-56`}><div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 20% 20%, white 0 1px, transparent 1px)', backgroundSize: '18px 18px' }} /><div className="relative"><span className="mb-3 inline-flex rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">{post.type}</span><p className="max-w-lg font-serif text-2xl font-bold leading-tight text-white sm:text-3xl">{post.title}</p></div></div><div className="p-4"><p className="text-sm leading-6">{post.text}</p><p className="mt-2 text-sm font-medium text-fuchsia-500">{post.tags}</p><div className="mt-4 flex items-center justify-between text-xs text-muted-foreground"><span>{post.likes + (liked ? 1 : 0)} me gusta</span><span>{post.comments} respuestas</span></div><div className="mt-3 flex items-center justify-between border-t border-border pt-2"><button onClick={() => setLiked(!liked)} className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition hover:bg-muted ${liked ? 'text-rose-500' : 'text-muted-foreground'}`}><Heart className={`size-[18px] ${liked ? 'fill-current' : ''}`} /> Útil</button><button onClick={() => setShowComments(!showComments)} className="flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium text-muted-foreground hover:bg-muted"><MessageCircle className="size-[18px]" /> Responder</button><button onClick={() => setSaved(!saved)} aria-label="Guardar publicación" className={`rounded-lg p-2 hover:bg-muted ${saved ? 'text-fuchsia-500' : 'text-muted-foreground'}`}><Bookmark className={`size-[18px] ${saved ? 'fill-current' : ''}`} /></button></div>{showComments && <div className="mt-3 flex items-center gap-2 border-t border-border pt-3"><input placeholder="Escribe una respuesta..." className="min-w-0 flex-1 rounded-xl bg-muted px-3 py-2 text-xs outline-none" /><button aria-label="Enviar respuesta" className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground"><Send className="size-3.5" /></button></div>}</div></article> }
+  return (
+    <aside className="hidden w-64 shrink-0 lg:block">
+      <div className="sticky top-6 flex flex-col gap-8">
+        <div className="flex items-center gap-3 px-4">
+          <div className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-fuchsia-500 via-rose-500 to-orange-400 text-white shadow-lg shadow-rose-500/20">
+            <Sparkles className="size-5" />
+          </div>
+          <span className="font-serif text-2xl font-bold tracking-tight">
+            foro<span className="text-fuchsia-500">RS</span>
+          </span>
+        </div>
 
-function ResourceHub() { const [query, setQuery] = useState(''); const filtered = resources.filter(r => r[0].toLowerCase().includes(query.toLowerCase())); return <section className="flex flex-col gap-4"><div className="flex items-center justify-between"><div><h2 className="text-2xl font-bold">Centro de recursos</h2><p className="text-sm text-muted-foreground">Herramientas para elevar tu próximo proyecto.</p></div><button className="flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"><Plus className="size-4" /> Subir recurso</button></div><div className="relative"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Buscar LUTs, presets, plugins..." className="w-full rounded-xl bg-card py-3 pl-10 pr-4 text-sm outline-none ring-1 ring-border focus:ring-2 focus:ring-fuchsia-400" /></div><div className="flex gap-2 overflow-x-auto">{['Todos', 'LUTs', 'Plugins', 'Presets', 'SFX', 'Templates'].map((item, i) => <button key={item} className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${i === 0 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>{item}</button>)}</div><div className="grid gap-3 sm:grid-cols-2">{filtered.map(([name, meta, downloads, rating]) => <div key={name} className="rounded-2xl bg-card p-4 ring-1 ring-border"><div className="mb-4 grid aspect-[1.8] place-items-center rounded-xl bg-gradient-to-br from-fuchsia-950 via-purple-800 to-orange-600 text-white"><Wrench className="size-8 opacity-80" /></div><h3 className="font-semibold">{name}</h3><p className="mt-1 text-xs text-muted-foreground">{meta}</p><div className="mt-3 flex items-center justify-between text-xs"><span className="flex items-center gap-1 text-amber-500"><Star className="size-3.5 fill-current" /> {rating}</span><span className="flex items-center gap-1 text-muted-foreground"><Download className="size-3.5" /> {downloads}</span></div><button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-muted py-2 text-xs font-semibold hover:bg-primary hover:text-primary-foreground"><Download className="size-3.5" /> Descargar</button></div>)}</div></section> }
+        <nav className="flex flex-col gap-1">
+          {navItems.map(([Icon, label]) => (
+            <button
+              key={label}
+              onClick={() => onSelect(label)}
+              className={`flex items-center gap-4 rounded-2xl px-4 py-3 text-sm font-medium transition hover:bg-muted ${
+                active === label ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'
+              }`}
+            >
+              <Icon className="size-[19px]" />
+              {label}
+              {label === 'Preguntas' && (
+                <span className="ml-auto grid size-5 place-items-center rounded-full bg-fuchsia-500 text-[10px] text-white">
+                  3
+                </span>
+              )}
+            </button>
+          ))}
+        </nav>
 
-function QuestionsHub() { return <section className="flex flex-col gap-4"><div><h2 className="text-2xl font-bold">Preguntas de la comunidad</h2><p className="text-sm text-muted-foreground">Resuelve dudas, comparte experiencia y gana reputación.</p></div>{questions.map((q, i) => <div key={q} className="flex items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-border"><div className="grid size-10 shrink-0 place-items-center rounded-xl bg-fuchsia-500/10 text-fuchsia-500"><MessageCircle className="size-5" /></div><div className="min-w-0 flex-1"><h3 className="font-semibold">{q}</h3><p className="mt-1 text-xs text-muted-foreground">{i * 7 + 4} respuestas · {i === 0 ? 'En tendencia' : 'Hace 2 h'}</p></div>{i === 0 && <span className="hidden items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-semibold text-emerald-600 sm:flex"><Check className="size-3" /> Resuelta</span>}<ChevronRight className="size-4 text-muted-foreground" /></div>)}</section> }
+        {isAuthenticated && user ? (
+          <UserMenu />
+        ) : (
+          <div className="flex flex-col gap-3 rounded-2xl bg-gradient-to-br from-card to-muted/40 p-4 shadow-sm ring-1 ring-border text-center">
+            <Sparkles className="mx-auto size-6 text-fuchsia-500" />
+            <h3 className="text-xs font-bold">Únete a Foro RS</h3>
+            <p className="text-[11px] text-muted-foreground">Accede a recursos exclusivos, realiza preguntas y conecta con otros creadores.</p>
+            <div className="flex flex-col gap-2 mt-1">
+              <button
+                onClick={() => openAuthModal('login')}
+                className="w-full rounded-xl bg-muted py-2 text-xs font-semibold hover:bg-muted/80 transition"
+              >
+                Iniciar Sesión
+              </button>
+              <button
+                onClick={() => openAuthModal('register')}
+                className="w-full rounded-xl bg-gradient-to-r from-fuchsia-500 to-orange-400 py-2 text-xs font-semibold text-white shadow-md transition hover:opacity-90"
+              >
+                Crear Cuenta
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </aside>
+  )
+}
 
-function RightRail() { return <aside className="hidden w-72 shrink-0 xl:block"><div className="sticky top-6 flex flex-col gap-5"><div className="relative"><Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><input aria-label="Buscar en Foro RS" placeholder="Buscar en Foro RS" className="w-full rounded-2xl bg-card py-3 pl-11 pr-4 text-sm outline-none ring-1 ring-border focus:ring-2 focus:ring-fuchsia-400" /></div><section className="rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border"><div className="mb-4 flex items-center justify-between"><h2 className="font-semibold">Tu reputación</h2><Star className="size-4 fill-amber-400 text-amber-400" /></div><div className="flex items-end gap-3"><p className="text-3xl font-bold">284</p><p className="mb-1 text-xs text-muted-foreground">puntos</p></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full w-3/5 rounded-full bg-gradient-to-r from-fuchsia-500 to-orange-400" /></div><p className="mt-2 text-xs text-muted-foreground">Filmmaker · 32 proyectos · 18 recursos</p></section><section className="rounded-2xl bg-primary p-5 text-primary-foreground"><div className="mb-3 flex items-center gap-2"><Zap className="size-4 text-orange-300" /><span className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/60">Temas activos</span></div>{[['#Cinematografía', '2.4 mil'], ['#EdiciónDeVideo', '1.8 mil'], ['#GuionYDirección', '956']].map(([tag, count]) => <div key={tag} className="flex items-center justify-between border-b border-primary-foreground/10 py-2 last:border-0"><p className="text-sm font-semibold">{tag}</p><p className="text-xs text-primary-foreground/50">{count}</p></div>)}</section></div></aside> }
+function Header({ onSelect }: { onSelect: (section: Section) => void }) {
+  return (
+    <header className="sticky top-0 z-10 border-b border-border/70 bg-background/90 backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-[1320px] items-center justify-between px-4 sm:px-6">
+        <div className="flex items-center gap-3 lg:hidden">
+          <div className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-fuchsia-500 via-rose-500 to-orange-400 text-white">
+            <Sparkles className="size-4" />
+          </div>
+          <span className="font-serif text-xl font-bold">
+            foro<span className="text-fuchsia-500">RS</span>
+          </span>
+        </div>
 
-export function SocialApp() { const [active, setActive] = useState<Section>('Inicio'); const [filter, setFilter] = useState<Filter>('Para ti'); const [feed, setFeed] = useState(posts); const [toast, setToast] = useState(''); const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2200) }; const visiblePosts = useMemo(() => filter === 'Para ti' ? feed : feed.filter(post => post.type === filter), [feed, filter]); const select = (section: Section) => { setActive(section); notify(`${section} seleccionado`) }; const createPost = (text: string, type: Filter) => { setFeed([{ id: Date.now(), type, name: 'María Rodríguez', handle: '@mariar', initials: 'MR', tone: 'from-fuchsia-500 to-orange-400', time: 'Ahora', title: type === 'Preguntas' ? 'Nueva pregunta para la comunidad' : 'Nuevo aporte de María', text, tags: `#${type.toLowerCase()} #filmmaking`, likes: 0, comments: 0, gradient: 'from-fuchsia-950 via-rose-800 to-orange-700' }, ...feed]); notify('Publicación compartida') }; return <div className="min-h-screen bg-background"><Header onSelect={select} /><div className="mx-auto flex max-w-[1320px] gap-8 px-4 py-6 sm:px-6"><Sidebar active={active} onSelect={select} /><main className="min-w-0 flex-1"><div className="mx-auto flex max-w-2xl flex-col gap-5">{active === 'Recursos' ? <ResourceHub /> : active === 'Preguntas' ? <QuestionsHub /> : <><div><p className="text-sm font-medium text-fuchsia-500">Comunidad Foro RS</p><h1 className="mt-1 text-2xl font-bold tracking-tight">Crea. Aprende. Comparte. Colabora.</h1><p className="mt-1 text-sm text-muted-foreground">Todo lo que necesitas para llevar tus historias a la pantalla.</p></div><Composer onPost={createPost} /><div className="flex items-center gap-1 overflow-x-auto border-b border-border pb-1">{(['Para ti', 'Preguntas', 'Proyectos', 'Recursos', 'Tutoriales'] as Filter[]).map(item => <button key={item} onClick={() => setFilter(item)} className={`whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold ${filter === item ? 'border-b-2 border-fuchsia-500 text-fuchsia-500' : 'text-muted-foreground'}`}>{item}</button>)}</div>{visiblePosts.length ? visiblePosts.map(post => <PostCard key={post.id} post={post} />) : <div className="rounded-2xl bg-card p-10 text-center ring-1 ring-border"><Sparkles className="mx-auto size-8 text-fuchsia-500" /><h2 className="mt-3 font-semibold">Aún no hay publicaciones aquí</h2><p className="mt-1 text-sm text-muted-foreground">Sé la primera persona en compartir algo.</p></div>}</>}</div></main><RightRail /></div>{toast && <div role="status" className="fixed bottom-6 left-1/2 z-20 -translate-x-1/2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-lg">{toast}</div>}<nav className="fixed inset-x-4 bottom-4 z-10 flex items-center justify-around rounded-2xl bg-card/95 p-2 shadow-xl ring-1 ring-border backdrop-blur lg:hidden">{navItems.slice(0, 5).map(([Icon, label]) => <button key={label} aria-label={label} onClick={() => select(label)} className={`grid size-10 place-items-center rounded-xl ${active === label ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}><Icon className="size-5" /></button>)}</nav></div> }
+        <div className="hidden items-center gap-2 text-sm font-medium text-muted-foreground md:flex">
+          <Users className="size-4 text-fuchsia-500" /> La comunidad de filmmakers
+        </div>
+
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button aria-label="Buscar" className="rounded-xl p-2.5 text-muted-foreground hover:bg-muted md:hidden">
+            <Search className="size-5" />
+          </button>
+          <button aria-label="Mensajes" onClick={() => onSelect('Mi red')} className="rounded-xl p-2.5 text-muted-foreground hover:bg-muted">
+            <Send className="size-5" />
+          </button>
+          <button aria-label="Notificaciones" onClick={() => onSelect('Preguntas')} className="relative rounded-xl p-2.5 text-muted-foreground hover:bg-muted">
+            <Bell className="size-5" />
+            <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-fuchsia-500 ring-2 ring-background" />
+          </button>
+
+          {/* User Menu Header */}
+          <UserMenu compact />
+        </div>
+      </div>
+    </header>
+  )
+}
+
+function Composer({ onPost }: { onPost: (text: string, type: Filter) => void }) {
+  const { user, isAuthenticated, openAuthModal } = useAuth()
+  const [text, setText] = useState('')
+  const [type, setType] = useState<Filter>('Preguntas')
+
+  const handleSubmit = () => {
+    if (!isAuthenticated) {
+      openAuthModal('login')
+      return
+    }
+    if (!text.trim()) return
+    onPost(text, type)
+    setText('')
+  }
+
+  return (
+    <section className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border">
+      <div className="mb-4 flex items-center gap-2 overflow-x-auto pb-1">
+        {(['Preguntas', 'Proyectos', 'Recursos', 'Tutoriales'] as Filter[]).map(item => (
+          <button
+            key={item}
+            onClick={() => setType(item)}
+            className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
+              type === item ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            {item}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex gap-3">
+        <Avatar
+          initials={user?.initials || 'RS'}
+          tone={user?.avatarTone || 'from-fuchsia-500 to-orange-400'}
+        />
+        <textarea
+          value={text}
+          onChange={e => setText(e.target.value)}
+          placeholder={isAuthenticated ? "Comparte una duda, recurso o avance de tu proyecto..." : "Inicia sesión para compartir con la comunidad..."}
+          rows={2}
+          className="min-h-16 flex-1 resize-none bg-transparent pt-1 text-sm outline-none placeholder:text-muted-foreground"
+        />
+      </div>
+
+      <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+        <div className="flex gap-1">
+          <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted">
+            <ImageIcon className="size-4 text-emerald-500" /> Archivo
+          </button>
+          <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted">
+            <Video className="size-4 text-rose-500" /> Video
+          </button>
+        </div>
+
+        {isAuthenticated ? (
+          <button
+            disabled={!text.trim()}
+            onClick={handleSubmit}
+            className="rounded-xl bg-gradient-to-r from-fuchsia-500 to-orange-400 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-fuchsia-500/20 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Publicar
+          </button>
+        ) : (
+          <button
+            onClick={() => openAuthModal('login')}
+            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-fuchsia-500 to-orange-400 px-4 py-2 text-xs font-semibold text-white shadow-md transition hover:opacity-90"
+          >
+            <LogIn className="size-3.5" /> Iniciar sesión para publicar
+          </button>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function PostCard({ post }: { post: Post }) {
+  const { isAuthenticated, openAuthModal } = useAuth()
+  const [liked, setLiked] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [showComments, setShowComments] = useState(false)
+  const [commentText, setCommentText] = useState('')
+
+  const handleAction = (action: () => void) => {
+    if (!isAuthenticated) {
+      openAuthModal('login')
+      return
+    }
+    action()
+  }
+
+  return (
+    <article className="overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-border">
+      <div className="flex items-center gap-3 p-4">
+        <Avatar initials={post.initials} tone={post.tone} />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold">{post.name}</p>
+          <p className="text-xs text-muted-foreground">{post.handle} · {post.time}</p>
+        </div>
+        <button aria-label="Más opciones" className="rounded-lg p-2 text-muted-foreground hover:bg-muted">
+          <MoreHorizontal className="size-5" />
+        </button>
+      </div>
+
+      <div className={`relative flex min-h-44 items-end bg-gradient-to-br ${post.gradient} p-6 sm:min-h-56`}>
+        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 20% 20%, white 0 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
+        <div className="relative">
+          <span className="mb-3 inline-flex rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
+            {post.type}
+          </span>
+          <p className="max-w-lg font-serif text-2xl font-bold leading-tight text-white sm:text-3xl">
+            {post.title}
+          </p>
+        </div>
+      </div>
+
+      <div className="p-4">
+        <p className="text-sm leading-6">{post.text}</p>
+        <p className="mt-2 text-sm font-medium text-fuchsia-500">{post.tags}</p>
+
+        <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+          <span>{post.likes + (liked ? 1 : 0)} me gusta</span>
+          <span>{post.comments} respuestas</span>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between border-t border-border pt-2">
+          <button
+            onClick={() => handleAction(() => setLiked(!liked))}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition hover:bg-muted ${
+              liked ? 'text-rose-500' : 'text-muted-foreground'
+            }`}
+          >
+            <Heart className={`size-[18px] ${liked ? 'fill-current' : ''}`} /> Útil
+          </button>
+          <button
+            onClick={() => handleAction(() => setShowComments(!showComments))}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium text-muted-foreground hover:bg-muted"
+          >
+            <MessageCircle className="size-[18px]" /> Responder
+          </button>
+          <button
+            onClick={() => handleAction(() => setSaved(!saved))}
+            aria-label="Guardar publicación"
+            className={`rounded-lg p-2 hover:bg-muted ${saved ? 'text-fuchsia-500' : 'text-muted-foreground'}`}
+          >
+            <Bookmark className={`size-[18px] ${saved ? 'fill-current' : ''}`} />
+          </button>
+        </div>
+
+        {showComments && (
+          <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
+            <input
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              placeholder="Escribe una respuesta..."
+              className="min-w-0 flex-1 rounded-xl bg-muted px-3 py-2 text-xs outline-none"
+            />
+            <button
+              onClick={() => {
+                if (commentText.trim()) {
+                  setCommentText('')
+                }
+              }}
+              aria-label="Enviar respuesta"
+              className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground"
+            >
+              <Send className="size-3.5" />
+            </button>
+          </div>
+        )}
+      </div>
+    </article>
+  )
+}
+
+function ResourceHub() {
+  const { openAuthModal, isAuthenticated } = useAuth()
+  const [query, setQuery] = useState('')
+  const filtered = resources.filter(r => r[0].toLowerCase().includes(query.toLowerCase()))
+
+  return (
+    <section className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Centro de recursos</h2>
+          <p className="text-sm text-muted-foreground">Herramientas para elevar tu próximo proyecto.</p>
+        </div>
+        <button
+          onClick={() => {
+            if (!isAuthenticated) openAuthModal('login')
+          }}
+          className="flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 transition"
+        >
+          <Plus className="size-4" /> Subir recurso
+        </button>
+      </div>
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <input
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Buscar LUTs, presets, plugins..."
+          className="w-full rounded-xl bg-card py-3 pl-10 pr-4 text-sm outline-none ring-1 ring-border focus:ring-2 focus:ring-fuchsia-400"
+        />
+      </div>
+
+      <div className="flex gap-2 overflow-x-auto">
+        {['Todos', 'LUTs', 'Plugins', 'Presets', 'SFX', 'Templates'].map((item, i) => (
+          <button key={item} className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${i === 0 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+            {item}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {filtered.map(([name, meta, downloads, rating]) => (
+          <div key={name} className="rounded-2xl bg-card p-4 ring-1 ring-border">
+            <div className="mb-4 grid aspect-[1.8] place-items-center rounded-xl bg-gradient-to-br from-fuchsia-950 via-purple-800 to-orange-600 text-white">
+              <Wrench className="size-8 opacity-80" />
+            </div>
+            <h3 className="font-semibold">{name}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">{meta}</p>
+            <div className="mt-3 flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1 text-amber-500">
+                <Star className="size-3.5 fill-current" /> {rating}
+              </span>
+              <span className="flex items-center gap-1 text-muted-foreground">
+                <Download className="size-3.5" /> {downloads}
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                if (!isAuthenticated) openAuthModal('login')
+              }}
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-muted py-2 text-xs font-semibold hover:bg-primary hover:text-primary-foreground transition"
+            >
+              <Download className="size-3.5" /> Descargar
+            </button>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function QuestionsHub() {
+  return (
+    <section className="flex flex-col gap-4">
+      <div>
+        <h2 className="text-2xl font-bold">Preguntas de la comunidad</h2>
+        <p className="text-sm text-muted-foreground">Resuelve dudas, comparte experiencia y gana reputación.</p>
+      </div>
+      {questions.map((q, i) => (
+        <div key={q} className="flex items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-border hover:border-fuchsia-500/50 transition cursor-pointer">
+          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-fuchsia-500/10 text-fuchsia-500">
+            <MessageCircle className="size-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold">{q}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">{i * 7 + 4} respuestas · {i === 0 ? 'En tendencia' : 'Hace 2 h'}</p>
+          </div>
+          {i === 0 && (
+            <span className="hidden items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-semibold text-emerald-600 sm:flex">
+              <Check className="size-3" /> Resuelta
+            </span>
+          )}
+          <ChevronRight className="size-4 text-muted-foreground" />
+        </div>
+      ))}
+    </section>
+  )
+}
+
+function RightRail() {
+  const { user } = useAuth()
+
+  return (
+    <aside className="hidden w-72 shrink-0 xl:block">
+      <div className="sticky top-6 flex flex-col gap-5">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            aria-label="Buscar en Foro RS"
+            placeholder="Buscar en Foro RS"
+            className="w-full rounded-2xl bg-card py-3 pl-11 pr-4 text-sm outline-none ring-1 ring-border focus:ring-2 focus:ring-fuchsia-400"
+          />
+        </div>
+
+        <section className="rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-semibold">Tu reputación</h2>
+            <Star className="size-4 fill-amber-400 text-amber-400" />
+          </div>
+          <div className="flex items-end gap-3">
+            <p className="text-3xl font-bold">{user ? user.reputation : 0}</p>
+            <p className="mb-1 text-xs text-muted-foreground">puntos</p>
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+            <div className="h-full w-3/5 rounded-full bg-gradient-to-r from-fuchsia-500 to-orange-400" />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {user ? `${user.role} · 32 proyectos` : 'Inicia sesión para subir tu nivel'}
+          </p>
+        </section>
+
+        <section className="rounded-2xl bg-primary p-5 text-primary-foreground">
+          <div className="mb-3 flex items-center gap-2">
+            <Zap className="size-4 text-orange-300" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/60">
+              Temas activos
+            </span>
+          </div>
+          {[
+            ['#Cinematografía', '2.4 mil'],
+            ['#EdiciónDeVideo', '1.8 mil'],
+            ['#GuionYDirección', '956']
+          ].map(([tag, count]) => (
+            <div key={tag} className="flex items-center justify-between border-b border-primary-foreground/10 py-2 last:border-0">
+              <p className="text-sm font-semibold">{tag}</p>
+              <p className="text-xs text-primary-foreground/50">{count}</p>
+            </div>
+          ))}
+        </section>
+      </div>
+    </aside>
+  )
+}
+
+function MainContent() {
+  const { user } = useAuth()
+  const [active, setActive] = useState<Section>('Inicio')
+  const [filter, setFilter] = useState<Filter>('Para ti')
+  const [feed, setFeed] = useState(initialPosts)
+  const [toast, setToast] = useState('')
+
+  const notify = (message: string) => {
+    setToast(message)
+    window.setTimeout(() => setToast(''), 2200)
+  }
+
+  const visiblePosts = useMemo(
+    () => (filter === 'Para ti' ? feed : feed.filter(post => post.type === filter)),
+    [feed, filter]
+  )
+
+  const select = (section: Section) => {
+    setActive(section)
+    notify(`${section} seleccionado`)
+  }
+
+  const createPost = (text: string, type: Filter) => {
+    const newPostName = user ? user.name : 'Creador Anónimo'
+    const newPostHandle = user ? user.handle : '@creador'
+    const newPostInitials = user ? user.initials : 'CA'
+    const newPostTone = user ? user.avatarTone : 'from-fuchsia-500 to-orange-400'
+
+    setFeed([
+      {
+        id: Date.now(),
+        type,
+        name: newPostName,
+        handle: newPostHandle,
+        initials: newPostInitials,
+        tone: newPostTone,
+        time: 'Ahora',
+        title: type === 'Preguntas' ? 'Nueva pregunta para la comunidad' : `Nuevo aporte de ${newPostName}`,
+        text,
+        tags: `#${type.toLowerCase()} #filmmaking`,
+        likes: 0,
+        comments: 0,
+        gradient: 'from-fuchsia-950 via-rose-800 to-orange-700',
+      },
+      ...feed,
+    ])
+    notify('Publicación compartida')
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header onSelect={select} />
+
+      <div className="mx-auto flex max-w-[1320px] gap-8 px-4 py-6 sm:px-6">
+        <Sidebar active={active} onSelect={select} />
+
+        <main className="min-w-0 flex-1">
+          <div className="mx-auto flex max-w-2xl flex-col gap-5">
+            {active === 'Recursos' ? (
+              <ResourceHub />
+            ) : active === 'Preguntas' ? (
+              <QuestionsHub />
+            ) : (
+              <>
+                <div>
+                  <p className="text-sm font-medium text-fuchsia-500">Comunidad Foro RS</p>
+                  <h1 className="mt-1 text-2xl font-bold tracking-tight">Crea. Aprende. Comparte. Colabora.</h1>
+                  <p className="mt-1 text-sm text-muted-foreground">Todo lo que necesitas para llevar tus historias a la pantalla.</p>
+                </div>
+
+                <Composer onPost={createPost} />
+
+                <div className="flex items-center gap-1 overflow-x-auto border-b border-border pb-1">
+                  {(['Para ti', 'Preguntas', 'Proyectos', 'Recursos', 'Tutoriales'] as Filter[]).map(item => (
+                    <button
+                      key={item}
+                      onClick={() => setFilter(item)}
+                      className={`whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold ${
+                        filter === item ? 'border-b-2 border-fuchsia-500 text-fuchsia-500' : 'text-muted-foreground'
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+
+                {visiblePosts.length ? (
+                  visiblePosts.map(post => <PostCard key={post.id} post={post} />)
+                ) : (
+                  <div className="rounded-2xl bg-card p-10 text-center ring-1 ring-border">
+                    <Sparkles className="mx-auto size-8 text-fuchsia-500" />
+                    <h2 className="mt-3 font-semibold">Aún no hay publicaciones aquí</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">Sé la primera persona en compartir algo.</p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </main>
+
+        <RightRail />
+      </div>
+
+      {toast && (
+        <div role="status" className="fixed bottom-6 left-1/2 z-20 -translate-x-1/2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-lg">
+          {toast}
+        </div>
+      )}
+
+      <AuthModal />
+    </div>
+  )
+}
+
+export function SocialApp() {
+  return (
+    <AuthProvider>
+      <MainContent />
+    </AuthProvider>
+  )
+}
 
 export default SocialApp
